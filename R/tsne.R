@@ -10,6 +10,7 @@ R_tsne <- R6Class(classname = "t-SNE",
                  public = list(
                    data = NULL,
                    group = NULL,
+                   isDistance = NULL,
                    k = NULL,
                    initial_config = NULL,
                    initial_dims = NULL,
@@ -19,7 +20,6 @@ R_tsne <- R6Class(classname = "t-SNE",
                    epoch_callback = NULL,
                    whiten = NULL,
                    epoch = NULL,
-                   result = NULL,
 
 #' Initialize function for R_tsne class
 #'
@@ -40,7 +40,7 @@ R_tsne <- R6Class(classname = "t-SNE",
 #'
 #' @examples
 #' tsne_iris = R_tsne$new(data=iris[,1:4], group=iris$Species, k=2, perplexity=50)
-                   initialize = function(data, group = NULL,
+                   initialize = function(data, group = NULL, isDistance = FALSE,
                                          initial_config = NULL, k = 2,
                                          initial_dims = 30, perplexity = 30,
                                          max_iter = 1000, min_cost = 0,
@@ -48,6 +48,7 @@ R_tsne <- R6Class(classname = "t-SNE",
                                          epoch=100) {
                      self$data <- data
                      self$group <- group
+                     self$isDistance <- isDistance
                      self$k <- k
                      self$initial_config <- initial_config
                      self$initial_dims <- initial_dims
@@ -59,19 +60,21 @@ R_tsne <- R6Class(classname = "t-SNE",
                      self$epoch <- epoch
                    },
 
-                   getResult = function(){
+                   getResult = function(...){
                      tryCatch({
-                       self$result = tsne(self$data,
-                                          initial_config = self$initial_config,
-                                          k = self$k,
-                                          initial_dims = self$initial_dims,
-                                          perplexity = self$perplexity,
-                                          max_iter = self$max_iter,
-                                          min_cost = self$min_cost,
-                                          epoch_callback = self$epoch_callback,
-                                          whiten = self$whiten,
-                                          epoch=self$epoch)
-                       self$result = as.data.frame(self$result)
+                       private$result = tsne(self$data,
+                                             initial_config = self$initial_config,
+                                             k = self$k,
+                                             initial_dims = self$initial_dims,
+                                             perplexity = self$perplexity,
+                                             max_iter = self$max_iter,
+                                             min_cost = self$min_cost,
+                                             epoch_callback = self$epoch_callback,
+                                             whiten = self$whiten,
+                                             epoch=self$epoch,
+                                             ...)
+                       private$result = as.data.frame(private$result)
+                       return(private$result)
                        }
                        ,
                        # error occurs

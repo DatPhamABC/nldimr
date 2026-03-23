@@ -2,6 +2,8 @@ library(umap)
 library(R6)
 
 
+#' umap_iris = R_umap$new(data=iris[,1:4], group=iris$Species, n_neighbors=5)
+
 R_umap <- R6Class(classname = "umap",
 
                   inherit = Dimension_reduction,
@@ -21,7 +23,6 @@ R_umap <- R6Class(classname = "umap",
                     bandwidth = NULL,
                     alpha = NULL,
                     gamma = NULL,
-                    result = NULL,
 
 
                     initialize = function(data, group = NULL,
@@ -53,7 +54,9 @@ R_umap <- R6Class(classname = "umap",
                                       n_components = self$n_components,
                                       input = self$input,...)
 
-                        self$result = as.data.frame(result$layout)
+                        private$result = as.data.frame(result$layout)
+
+                        return(private$result)
                       }
                       ,
                       # error occurs
