@@ -1,6 +1,3 @@
-library(umap)
-library(R6)
-
 
 #' umap_iris = R_umap$new(data=iris[,1:4], group=iris$Species, n_neighbors=5)
 

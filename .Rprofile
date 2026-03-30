@@ -1,0 +1,7 @@
+library(devtools)
+library(R6)
+library(ggplot2)
+library(plotly)
+library(umap)
+library(densvis)
+library(Rtsne)
