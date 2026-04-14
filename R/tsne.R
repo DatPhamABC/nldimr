@@ -24,18 +24,31 @@ R_tsne <- R6Class(classname = "t-SNE",
                   #' @export
                   #'
                   #' @examples
-                  #' tsne_iris = R_tsne$new(data=iris[!duplicated(iris),1:4], group=iris$Species, dims=2, perplexity=20)
-                   initialize = function(data, group = NULL, isDistance = FALSE,
-                                         dims = 2, perplexity = 30, theta = 0.5) {
-                     self$data <- data
-                     self$group <- group
+                  #' tsne_iris = R_tsne$new(data=iris[!duplicated(iris),1:4], group=iris[!duplicated(iris),]$Species, dims=2, perplexity=20)
+                   initialize = function(data,
+                                         group = NULL,
+                                         isDistance = FALSE,
+                                         sampling = NULL,
+                                         dims = 2,
+                                         perplexity = 30,
+                                         theta = 0.5) {
+                     if(!is.null(sampling)){
+                       sample_index <- sample(nrow(data), size=sampling)
+
+                       self$data <- data[sample_index,]
+                       self$group <- group[sample_index,]
+                     } else {
+                       self$data <- data
+                       self$group <- group
+                     }
+
                      self$isDistance <- isDistance
                      self$dims <- dims
                      self$perplexity <- perplexity
                      self$theta <- theta
                    },
 
-                   getResult = function(...){
+                   get_Result = function(...){
                      tryCatch({
                        results <- Rtsne(self$data,
                                         dims = self$dims,
@@ -73,14 +86,18 @@ R_tsne <- R6Class(classname = "t-SNE",
                    },
 
                   ##############################################################
-                   plot_PQ = function(){
-                     pq_data <- data.frame(self$get_P(), self$get_Q())
+                   plot_PQ = function(sampling = NULL){
+                     pq_data <- data.frame(c(self$get_P()), c(self$get_Q()))
+
+                     if(!is.null(sampling)){
+                       pq_data <- pq_data[sample(nrow(pq_data), size = sampling), ]
+                     }
+
                      colnames(pq_data) <- c('p_probs', 'q_probs')
 
                      plt <- ggplot(pq_data, aes(p_probs, q_probs)) +
-                       geom_point() +
-                       labs(x='P probabilities', y='Q probabilities') +
-                       coord_fixed()
+                       geom_point(alpha=0.5) +
+                       labs(x='P probabilities', y='Q probabilities')
 
                      print(plt)
                      return(plt)
@@ -139,7 +156,8 @@ R_tsne <- R6Class(classname = "t-SNE",
                       }
 
                       P <- (P + t(P)) / (2 * n)
-                      return(P)
+                      P <- P[upper.tri(P)]
+                      return(c(P))
                       },
 
                   ##############################################################
@@ -150,9 +168,7 @@ R_tsne <- R6Class(classname = "t-SNE",
                       Q <- 1 / (1 + low_dist)
                       diag(Q) <- 0
                       Q <- Q / sum(Q)
-                      return(Q)
+                      return(c(Q[upper.tri(Q)]))
                     }
-
-
                   )
 )

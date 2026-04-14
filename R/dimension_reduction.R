@@ -1,4 +1,3 @@
-
 Dimension_reduction <- R6Class(classname = "dimension reduction",
 
                   # public attributes and methods
@@ -7,12 +6,12 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                     isDistance = FALSE,
                     group = NULL,
 
-                    ############################################################
+                  ##############################################################
                     plot_Result = function(){
                       tryCatch({
                         if (is.null(private$result)){
                           stop(paste("No dimensionality reduction result found.
-                                      Please run getResult() first."))
+                                      Please run get_Result() first."))
                         }
 
                         if (ncol(private$result) != 2 & ncol(private$result) != 3){
@@ -32,17 +31,16 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                           colnames(full_data) <- cols
 
                           plt <- ggplot(data = full_data) +
-                            geom_point(size = 2) +
+                            geom_point(size = 2, alpha=0.5) +
                             aes(x=dim_1, y=dim_2) +
-                            labs(x='Dimension 1', y='Dimension 2')
+                            labs(x='Dimension 1', y='Dimension 2') +
+                            coord_fixed(ratio=1)
 
                           if(!is.null(self$group)){
                             plt <- plt +
                               aes(col = as.factor(group)) +
                               labs(col = 'Groups')
                           }
-
-                          plt <- plt + coord_fixed()
 
                           print(plt)
                           return(plt)
@@ -62,7 +60,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                       )
                     },
 
-                    ############################################################
+                  ##############################################################
                     fit_Plot = function(){
                       if (self$isDistance){
                         full_dist <- data.frame(as.vector(self$data),
@@ -75,15 +73,14 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                       plt <- ggplot(data = full_dist, aes(x = high_dim, y = low_dim)) +
                         geom_point(size = 2) +
                         labs(x = 'High-dimensional Distance',
-                             y = 'Low-dimensional Distance') +
-                        coord_fixed()
+                             y = 'Low-dimensional Distance')
 
                       print(plt)
                       return(plt)
 
                     },
 
-                    ############################################################
+                  ##############################################################
                     get_Jaccard_Similarity = function(k=5, method='euclidean'){
                       tryCatch({
                         if(is.null(k) | k>=nrow(self$data)){
@@ -115,12 +112,12 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                       })
                     },
 
-                    ############################################################
+                  ##############################################################
                     plot_Jaccard_Similarity = function(k=5, method='euclidean') {
                       tryCatch({
                         if (is.null(private$result)){
                           stop(paste("No dimensionality reduction result found.
-                                      Please run getResult() first."))
+                                      Please run get_Result() first."))
                         }
 
                         if (ncol(private$result) != 2 & ncol(private$result) != 3){
@@ -137,11 +134,10 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                           colnames(full_data) <- cols
 
                           plt <- ggplot(data = full_data) +
-                            geom_point(size = 2) +
+                            geom_point(size = 2, alpha=0.6) +
                             aes(x=dim_1, y=dim_2, col=jaccard) +
                             labs(x='Dimension 1', y='Dimension 2', col='Jaccard Similarity') +
-                            scale_color_gradient2(low='darkred', mid='white', high='darkblue', midpoint = 0.5) +
-                            coord_fixed()
+                            scale_color_gradient(low='red', high='green')
 
                           print(plt)
                           return(plt)
@@ -171,7 +167,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
 
                       for(k in c(1:max_k)){
                         result <- rbind(result, data.frame(rep(k, nrow(self$data)),
-                                                           mean(self$getJaccardSimilarity(k, method))))
+                                                           mean(self$get_Jaccard_Similarity(k, method))))
                       }
 
                       colnames(result) <- c('k', 'jaccard_similarity')
@@ -253,13 +249,14 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
 
                         fig <- plot_ly(full_data,
                                        x = ~dim_1, y = ~dim_2, z = ~dim_3,
-                                       colors = c('#000'))
+                                       colors = c('#00000020'))
                       }
 
+                      print(data)
                       fig <- fig %>% add_markers()
-                      fig <- fig %>% layout(scene = list(xaxis = list(title = 'Dimension 1'),
-                                                         yaxis = list(title = 'Dimension 2'),
-                                                         zaxis = list(title = 'Dimension 3')))
+                      fig <- fig %>% plotly::layout(scene = list(xaxis = list(title = 'Dimension 1'),
+                                                                 yaxis = list(title = 'Dimension 2'),
+                                                                 zaxis = list(title = 'Dimension 3')))
 
                       return(fig)
 
