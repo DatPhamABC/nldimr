@@ -5,6 +5,7 @@ R_tsne <- R6Class(classname = "t-SNE",
                   # public attributes and methods
                   public = list(
                     data = NULL,
+                    name = NULL,
                     group = NULL,
                     isDistance = NULL,
                     dims = NULL,
@@ -26,12 +27,14 @@ R_tsne <- R6Class(classname = "t-SNE",
                   #' @examples
                   #' tsne_iris = R_tsne$new(data=iris[!duplicated(iris),1:4], group=iris[!duplicated(iris),]$Species, dims=2, perplexity=20)
                    initialize = function(data,
+                                         name = 't-SNE',
                                          group = NULL,
                                          isDistance = FALSE,
                                          sampling = NULL,
                                          dims = 2,
                                          perplexity = 30,
-                                         theta = 0.5) {
+                                         theta = 0.5,
+                                         ...) {
                      if(!is.null(sampling)){
                        sample_index <- sample(nrow(data), size=sampling)
 
@@ -42,13 +45,16 @@ R_tsne <- R6Class(classname = "t-SNE",
                        self$group <- group
                      }
 
+                     self$name <- name
                      self$isDistance <- isDistance
                      self$dims <- dims
                      self$perplexity <- perplexity
                      self$theta <- theta
+
+                     private$result <- self$get_result(print_result=FALSE, ...)
                    },
 
-                   get_Result = function(...){
+                   get_result = function(print_result=FALSE, ...){
                      tryCatch({
                        results <- Rtsne(self$data,
                                         dims = self$dims,
@@ -57,7 +63,11 @@ R_tsne <- R6Class(classname = "t-SNE",
                                         is_distance = self$isDistance,
                                         ...)
                        private$result <- as.data.frame(results$Y)
-                       return(private$result)
+                       if (print_result) {
+                         return(private$result)
+                       } else {
+                         return(invisible(private$result))
+                       }
                        }
                        ,
                        # error occurs

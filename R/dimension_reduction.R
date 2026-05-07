@@ -71,7 +71,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                       }
                       colnames(full_dist) <- c('high_dim', 'low_dim')
                       plt <- ggplot(data = full_dist, aes(x = high_dim, y = low_dim)) +
-                        geom_point(size = 2) +
+                        geom_point(size = 2, alpha = 0.5) +
                         labs(x = 'High-dimensional Distance',
                              y = 'Low-dimensional Distance')
 
@@ -156,7 +156,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                       })
                     },
 
-                    ############################################################
+                  ############################################################
                     plot_Jaccard_Per_Neighbor = function(max_k, method='euclidean'){
                       result <- data.frame()
 
@@ -180,8 +180,97 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
 
                       print(plt)
                       return(plt)
-                    }
+                    },
 
+                  ##############################################################
+                    trustworthiness = function(k=5) {
+                      tryCatch({
+                        if (is.null(private$result)){
+                          stop(paste("No dimensionality reduction result found.
+                                        Please run get_Result() first."))
+                        }
+                        n <- nrow(self$data)
+
+                        # Compute distances
+                        dist_X <- as.matrix(dist(self$data))
+                        dist_Y <- as.matrix(dist(private$result))
+
+                        # Order distances
+                        rank_X <- apply(dist_X, 1, function(row) rank(row, ties.method = "average"))
+                        rank_X <- t(rank_X)
+
+                        rank_Y <- apply(dist_Y, 1, function(row) rank(row, ties.method = "average"))
+                        rank_Y <- t(rank_Y)
+
+                        total_penalty <- 0
+
+                        for (i in 1:n) {
+                          # Get k nearest neighbors in low dimensional space
+                          neighbors_Y <- order(rank_Y[i, ])[2:(k + 1)]
+
+                          for (j in neighbors_Y) {
+                            if (rank_X[i, j] > k) {
+                              total_penalty <- total_penalty + (rank_X[i, j] - k)
+                            }
+                          }
+                        }
+
+                        # Normalization
+                        normalization <- 2/(n*k * (2*n - 3*k - 1))
+
+                        tw <- 1 - normalization * total_penalty
+
+                        return(tw)
+                      }, error = function(e) {
+                          message('Trustworthiness error:')
+                          print(e)
+                      })
+                    },
+
+                  ##############################################################
+                    continuity = function(k=5) {
+                      tryCatch({
+                        if (is.null(private$result)){
+                          stop(paste("No dimensionality reduction result found.
+                                          Please run get_Result() first."))
+                        }
+                        n <- nrow(self$data)
+
+                        # Compute distances
+                        dist_X <- as.matrix(dist(self$data))
+                        dist_Y <- as.matrix(dist(private$result))
+
+                        # order distances
+                        rank_X <- apply(dist_X, 1, function(row) rank(row, ties.method = "average"))
+                        rank_X <- t(rank_X)
+
+                        rank_Y <- apply(dist_Y, 1, function(row) rank(row, ties.method = "average"))
+                        rank_Y <- t(rank_Y)
+
+                        total_penalty <- 0
+
+                        for (i in 1:n) {
+                          # k nearest neighbors in high dimensional space
+                          neighbors_X <- order(rank_X[i, ])[2:(k + 1)]
+
+                          for (j in neighbors_X) {
+                            if (rank_Y[i, j] > k) {
+                              total_penalty <- total_penalty + (rank_Y[i, j] - k)
+                            }
+                          }
+                        }
+
+                        # Normalization
+                        normalization <- 2/(n*k * (2*n - 3*k - 1))
+
+                        cont <- 1 - normalization * total_penalty
+
+                        return(cont)
+                      }, error = function(e) {
+                        message('Continuity error:')
+                        print(e)
+                      })
+                    }
                   ),
 
 

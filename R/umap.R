@@ -8,6 +8,7 @@ R_umap <- R6Class(classname = "umap",
                   # public attributes and methods
                   public = list(
                     data = NULL,
+                    name = NULL,
                     group = NULL,
                     isDistance = NULL,
                     metric = NULL,
@@ -20,14 +21,17 @@ R_umap <- R6Class(classname = "umap",
 
                     ############################################################
                     initialize = function(data,
+                                          name = 'UMAP',
                                           isDistance = FALSE,
                                           group = NULL,
-                                          sampling = NULL,
                                           metric = "euclidean",
                                           n_neighbors = 15,
                                           n_components = 2,
                                           min_dist = 0.1,
-                                          spread = 1
+                                          spread = 1,
+                                          sampling = NULL,
+                                          print_result=FALSE,
+                                          ...
                                           ) {
 
                       if(!is.null(sampling)){
@@ -40,16 +44,19 @@ R_umap <- R6Class(classname = "umap",
                         self$group <- group
                       }
 
+                      self$name <- name
                       self$isDistance <- isDistance
                       self$metric <- metric
                       self$n_neighbors <- n_neighbors
                       self$n_components <- n_components
                       self$min_dist <- min_dist
                       self$spread <- spread
+
+                      private$result <- self$get_result(print_result=FALSE,...)
                     },
 
                     ############################################################
-                    get_Result = function(...){
+                    get_result = function(print_result=FALSE, ...){
                       tryCatch({
                         result = umap2(X = self$data,
                                        n_neighbors = self$n_neighbors,
@@ -64,7 +71,11 @@ R_umap <- R6Class(classname = "umap",
 
                         private$V <- result$fgraph
 
-                        return(private$result)
+                        if (print_result) {
+                          return(private$result)
+                        } else {
+                          return(invisible(private$result))
+                        }
                       }
                       ,
                       # error occurs
@@ -81,7 +92,7 @@ R_umap <- R6Class(classname = "umap",
                       )
                     },
 
-                    ##############################################################
+                  ##############################################################
                     get_V = function(){
                       if(is.null(private$V)) stop('Result has not been calculated. Please run get_Result() first.')
                       v <- as.matrix(private$V)
@@ -89,13 +100,13 @@ R_umap <- R6Class(classname = "umap",
                       return(c(v[upper.tri(v)]))
                     },
 
-                    ##############################################################
+                  ##############################################################
                     get_W = function(){
                       if(is.null(private$W)) private$W <- private$compute_W()
                       return(private$W)
                     },
 
-                    ##############################################################
+                  ##############################################################
                     plot_VW = function(sampling = NULL){
                       vw_data <- data.frame(self$get_V(), self$get_W())
 

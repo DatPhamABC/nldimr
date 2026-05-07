@@ -5,6 +5,7 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                   # public attributes and methods
                   public = list(
                     data = NULL,
+                    name = NULL,
                     group = NULL,
                     isDistance = NULL,
                     dims = NULL,
@@ -18,9 +19,9 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
 
                     #' densne_iris = dense_tsne$new(data=iris[!duplicated(iris),1:4], group=iris[!duplicated(iris),]$Species, dims=2, perplexity=20)
                     initialize = function(data,
+                                          name = 'dense t-SNE',
                                           group = NULL,
                                           isDistance = FALSE,
-                                          sub_sampling = NULL,
                                           dims = 2,
                                           perplexity = 50,
                                           theta = 0.5,
@@ -28,7 +29,10 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                                           momentum = 0.5,
                                           eta = 200,
                                           dens_frac = 0.3,
-                                          dens_lambda = 0.1
+                                          dens_lambda = 0.1,
+                                          sampling = NULL,
+                                          print_result = FALSE,
+                                          ...
                                           ) {
                       if(!is.null(sampling)){
                         sample_index <- sample(nrow(data), size=sampling)
@@ -40,6 +44,7 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                         self$group <- group
                       }
 
+                      self$name <- name
                       self$isDistance <- isDistance
                       self$dims <- dims
                       self$perplexity <- perplexity
@@ -49,9 +54,11 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                       self$eta <- eta
                       self$dens_frac <- dens_frac
                       self$dens_lambda <- dens_lambda
+
+                      private$result <- self$get_result(print_result=FALSE, ...)
                     },
 
-                    get_Result = function(...){
+                    get_result = function(print_result=FALSE, ...){
                       tryCatch({
                         private$result <- densne(X = self$data,
                                           dims = self$dims,
@@ -64,7 +71,11 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                                           dens_lambda = self$dens_lambda,
                                           ...
                                           )
-                        return(private$result)
+                        if (print_result) {
+                          return(private$result)
+                        } else {
+                          return(invisible(private$result))
+                        }
                       }
                       ,
                       # error occurs
@@ -95,7 +106,6 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                   ##############################################################
                     plot_PQ = function(sampling = NULL){
                       pq_data <- data.frame(self$get_P(), self$get_Q())
-                      print(dim(pq_data))
 
                       if(!is.null(sampling)){
                         pq_data <- pq_data[sample(nrow(pq_data), size = sampling), ]

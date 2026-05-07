@@ -5,6 +5,7 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                       # public attributes and methods
                       public = list(
                         data = NULL,
+                        name = NULL,
                         group = NULL,
                         isDistance = NULL,
                         metric = NULL,
@@ -17,16 +18,19 @@ dense_umap <- R6Class(classname = "dense-UMAP",
 
                         #' densmap_iris = dense_umap$new(data=iris[!duplicated(iris),1:4], group=iris[!duplicated(iris),]$Species, n_neighbors=8, n_components = 2)
                         initialize = function(data,
+                                              name = 'dense UMAP',
                                               group = NULL,
                                               isDistance = FALSE,
-                                              sampling = NULL,
                                               metric = "euclidean",
                                               n_neighbors = 15,
                                               n_components = 2,
                                               min_dist = 0.1,
                                               spread = 1,
                                               dens_frac = 0.3,
-                                              dens_lambda = 0.1
+                                              dens_lambda = 0.1,
+                                              sampling = NULL,
+                                              print_result = FALSE,
+                                              ...
                                               ) {
                           if(!is.null(sampling)){
                             sample_index <- sample(nrow(data), size=sampling)
@@ -38,6 +42,7 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                             self$group <- group
                           }
 
+                          self$name <- name
                           self$isDistance <- isDistance
                           self$metric <- metric
                           self$n_neighbors <- n_neighbors
@@ -46,9 +51,11 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                           self$spread <- spread
                           self$dens_frac <- dens_frac
                           self$dens_lambda <- dens_lambda
+
+                          private$result <- self$get_result(print_result=FALSE, ...)
                         },
 
-                        get_Result = function(...){
+                        get_result = function(print_result=FALSE, ...){
                           tryCatch({
                             private$result <- densmap(x = data.frame(self$data),
                                                       n_neighbors = self$n_neighbors,
@@ -60,7 +67,11 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                                                       dens_lambda = self$dens_lambda,
                                                       ...
                                                       )
-                            return(private$result)
+                            if (print_result) {
+                              return(private$result)
+                            } else {
+                              return(invisible(private$result))
+                            }
                           }
                           ,
                           # error occurs
@@ -117,14 +128,121 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                         V = NULL,
                         W = NULL,
 
-                        ##############################################################
+                      ##############################################################
                         compute_V = function(){
+                          # nn <- FNN::get.knn(self$data, k = self$n_neighbors)
+                          # distances <- nn$nn.dist
+                          # indices <- nn$nn.index
+                          #
+                          # rho <- apply(distances, 1, function(row) {
+                          #   pos_r <- row[row > 0]
+                          #   if (length(pos_r) == 0) 0 else min(pos_r)
+                          # })
+                          #
+                          # find_sigma <- function(dist_row, rho_i, target = log2(self$n_neighbors)) {
+                          #   sigma <- 1
+                          #   sigma_min <- 0
+                          #   sigma_max <- Inf
+                          #
+                          #   for (iter in 1:50) {
+                          #     val <- sum(exp(-pmax(dist_row - rho_i,0) / sigma))
+                          #
+                          #     if (abs(val - target) < 1e-5) break
+                          #
+                          #     if (val > target) {
+                          #       sigma_max <- sigma
+                          #       sigma <- if (is.infinite(sigma_min)) sigma / 2 else (sigma + sigma_min)/2
+                          #     } else {
+                          #       sigma_min <- sigma
+                          #       sigma <- if (is.infinite(sigma_max)) sigma * 2 else (sigma + sigma_max)/2
+                          #     }
+                          #   }
+                          #   return(sigma)
+                          # }
+                          #
+                          # sigma <- sapply(1:nrow(distances), function(i) {
+                          #   find_sigma(distances[i, ], rho[i])
+                          # })
+                          #
+                          # V_condition <- matrix(0, nrow(distances), ncol(distances))
+                          #
+                          # for (i in 1:nrow(distances)) {
+                          #   V_condition[i, ] <- exp(-pmax(distances[i, ] - rho[i], 0) / sigma[i])
+                          # }
+                          #
+                          # n <- nrow(self$data)
+                          # V <- matrix(0, n, n)
+                          #
+                          # for (i in 1:n) {
+                          #   for (j in 1:self$n_neighbors) {
+                          #     j_indice <- indices[i, j]
+                          #     V[i, j_indice] <- V_condition[i, j]
+                          #   }
+                          # }
+                          #
 
+                          method <- 'fnn'
+                          n_trees <- 50
+                          search_k <- 2*self$n_neighbors*n_trees
+                          nn_args <- list()
+                          tmpdir <- tempdir()
+                          n_threads <- NULL
+                          n_build_threads <- NULL
+                          grain_size <- 1
+                          ret_model <- FALSE
+                          sparse_is_distance <- TRUE
+                          verbose <- FALSE
+
+                          set_op_mix_ratio = 1.0
+                          local_connectivity = 1.0
+                          bandwidth = 1.0
+                          ret_sigma = 'sigma'
+
+                          nn <- uwot:::find_nn(
+                            self$data,
+                            self$n_neighbors,
+                            # method = method,
+                            metric = self$metric,
+                            # n_trees = n_trees,
+                            # search_k = 2 * n_neighbors * n_trees,
+                            # nn_args = nn_args,
+                            # tmpdir = tmpdir,
+                            # n_threads = n_threads,
+                            # grain_size = grain_size,
+                            # ret_index = ret_model,
+                            # sparse_is_distance = sparse_is_distance,
+                            verbose = verbose
+                          )
+
+                          res <- uwot:::fuzzy_simplicial_set(
+                            nn = nn,
+                            set_op_mix_ratio = set_op_mix_ratio,
+                            local_connectivity = local_connectivity,
+                            # bandwidth = bandwidth,
+                            # ret_sigma = ret_sigma,
+                            # n_threads = n_threads,
+                            # grain_size = grain_size,
+                            verbose = verbose
+                          )
+
+                          V <- as.matrix(res)
+                          diag(V) <- 0
+                          return(c(V[upper.tri(V)]))
                         },
 
                         ##############################################################
                         compute_W = function(){
+                          if(is.null(private$result)) stop('Result has not been calculated. Please run get_Result() first.')
 
+                          ab <- uwot:::find_ab_params(spread = self$spread,
+                                                      min_dist = self$min_dist)
+
+                          dist_sq <- as.matrix(dist(private$result, method=self$metric))^2
+
+                          q_val <- 1/(1 + ab['a']*(dist_sq)^(2*ab['b']))
+                          q_val <- c(q_val[upper.tri(q_val)])
+
+                          return(q_val)
                         }
 
                       )
