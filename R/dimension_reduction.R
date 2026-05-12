@@ -7,7 +7,8 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                     group = NULL,
 
                   ##############################################################
-                    plot_Result = function(){
+                    plot_result = function(save=FALSE, filename=NULL,
+                                           width=500, height=500, units='px'){
                       tryCatch({
                         if (is.null(private$result)){
                           stop(paste("No dimensionality reduction result found.
@@ -43,6 +44,13 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                           }
 
                           print(plt)
+
+                          if (save){
+                            ggsave(filename=filename, plot=plt,
+                                   height=height, width=width,
+                                   units=units)
+                          }
+
                           return(plt)
 
                          }
@@ -61,7 +69,9 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                     },
 
                   ##############################################################
-                    fit_Plot = function(){
+                    shepard_diagram = function(sampling = NULL,
+                                               save=FALSE, filename=NULL,
+                                               width=500, height=500, units='px'){
                       if (self$isDistance){
                         full_dist <- data.frame(as.vector(self$data),
                                                 as.vector(dist(private$result)))
@@ -70,10 +80,22 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                                                 as.vector(dist(private$result)))
                       }
                       colnames(full_dist) <- c('high_dim', 'low_dim')
+
+                      if(!is.null(sampling)){
+                        full_dist <- full_dist[sample(nrow(full_dist), size = sampling), ]
+                      }
+
                       plt <- ggplot(data = full_dist, aes(x = high_dim, y = low_dim)) +
                         geom_point(size = 2, alpha = 0.5) +
                         labs(x = 'High-dimensional Distance',
                              y = 'Low-dimensional Distance')
+
+
+                      if (save){
+                        ggsave(filename=filename, plot=plt,
+                               height=height, width=width,
+                               units=units)
+                      }
 
                       print(plt)
                       return(plt)
@@ -81,7 +103,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                     },
 
                   ##############################################################
-                    get_Jaccard_Similarity = function(k=5, method='euclidean'){
+                    get_Jaccard_similarity = function(k=5, method='euclidean'){
                       tryCatch({
                         if(is.null(k) | k>=nrow(self$data)){
                           stop("Invalid number of neighbors. The number of neighbors must be less than the number of observations.")
@@ -113,7 +135,10 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                     },
 
                   ##############################################################
-                    plot_Jaccard_Similarity = function(k=5, method='euclidean') {
+                    plot_Jaccard_similarity = function(k=5, method='euclidean',
+                                                       save=FALSE, filename=NULL,
+                                                       width=500, height=500,
+                                                       units='px') {
                       tryCatch({
                         if (is.null(private$result)){
                           stop(paste("No dimensionality reduction result found.
@@ -126,7 +151,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                         }
 
 
-                        jaccard <- self$get_Jaccard_Similarity(k, method)
+                        jaccard <- self$get_Jaccard_similarity(k, method)
                         full_data <- data.frame(private$result, jaccard)
 
                         if ( ncol(private$result) == 2 ) {
@@ -138,6 +163,12 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                             aes(x=dim_1, y=dim_2, col=jaccard) +
                             labs(x='Dimension 1', y='Dimension 2', col='Jaccard Similarity') +
                             scale_color_gradient(low='red', high='green')
+
+                          if (save){
+                            ggsave(filename=filename, plot=plt,
+                                   height=height, width=width,
+                                   units=units)
+                          }
 
                           print(plt)
                           return(plt)
@@ -157,7 +188,10 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                     },
 
                   ############################################################
-                    plot_Jaccard_Per_Neighbor = function(max_k, method='euclidean'){
+                    plot_Jaccard_per_neighbor = function(max_k, method='euclidean',
+                                                         save=FALSE, filename=NULL,
+                                                         width=500, height=500,
+                                                         units='px'){
                       result <- data.frame()
 
                       if (max_k >= nrow(self$data)){
@@ -167,7 +201,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
 
                       for(k in c(1:max_k)){
                         result <- rbind(result, data.frame(rep(k, nrow(self$data)),
-                                                           mean(self$get_Jaccard_Similarity(k, method))))
+                                                           mean(self$get_Jaccard_similarity(k, method))))
                       }
 
                       colnames(result) <- c('k', 'jaccard_similarity')
@@ -176,7 +210,11 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                         geom_line() +
                         labs(x = 'k', y = 'Average Jaccard Similarity')
 
-
+                      if (save){
+                        ggsave(filename=filename, plot=plt,
+                               height=height, width=width,
+                               units=units)
+                      }
 
                       print(plt)
                       return(plt)
