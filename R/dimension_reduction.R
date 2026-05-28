@@ -8,7 +8,10 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
 
                   ##############################################################
                     plot_result = function(save=FALSE, filename=NULL,
-                                           width=500, height=500, units='px'){
+                                           width=NA, height=NA,
+                                           units=c("in", "cm", "mm", "px"),
+                                           ratio=1,
+                                           display_legend=FALSE){
                       tryCatch({
                         if (is.null(private$result)){
                           stop(paste("No dimensionality reduction result found.
@@ -35,7 +38,10 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                             geom_point(size = 2, alpha=0.5) +
                             aes(x=dim_1, y=dim_2) +
                             labs(x='Dimension 1', y='Dimension 2') +
-                            coord_fixed(ratio=1)
+                            coord_fixed(ratio=ratio) +
+                            scale_color_brewer(palette="Paired")
+
+                          if(!display_legend) plt <- plt + theme(legend.position="none")
 
                           if(!is.null(self$group)){
                             plt <- plt +
@@ -45,9 +51,19 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
 
                           print(plt)
 
-                          if (save){
-                            ggsave(filename=filename, plot=plt,
-                                   height=height, width=width,
+                          # if (save){
+                          #   ggsave(filename=filename,
+                          #          plot=egg::set_panel_size(p=plt,
+                          #                                   width = grid::unit(width, units = units),
+                          #                                   height = grid::unit(height, units = units))
+                          #   )
+                          # }
+
+                          if(save){
+                            ggsave(filename = filename,
+                                   plot=plt,
+                                   width=width,
+                                   height=height,
                                    units=units)
                           }
 
@@ -71,7 +87,8 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                   ##############################################################
                     shepard_diagram = function(sampling = NULL,
                                                save=FALSE, filename=NULL,
-                                               width=500, height=500, units='px'){
+                                               width=NA, height=NA,
+                                               units=c("in", "cm", "mm", "px")){
                       if (self$isDistance){
                         full_dist <- data.frame(as.vector(self$data),
                                                 as.vector(dist(private$result)))
@@ -87,13 +104,15 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
 
                       plt <- ggplot(data = full_dist, aes(x = high_dim, y = low_dim)) +
                         geom_point(size = 2, alpha = 0.5) +
-                        labs(x = 'High-dimensional Distance',
-                             y = 'Low-dimensional Distance')
+                        labs(x = 'High-dimensional Distances',
+                             y = 'Low-dimensional Distances')
 
 
-                      if (save){
-                        ggsave(filename=filename, plot=plt,
-                               height=height, width=width,
+                      if(save){
+                        ggsave(filename = filename,
+                               plot=plt,
+                               width=width,
+                               height=height,
                                units=units)
                       }
 
@@ -137,8 +156,9 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                   ##############################################################
                     plot_Jaccard_similarity = function(k=5, method='euclidean',
                                                        save=FALSE, filename=NULL,
-                                                       width=500, height=500,
-                                                       units='px') {
+                                                       width=NA, height=NA,
+                                                       units=c("in", "cm", "mm", "px"),
+                                                       ratio=1) {
                       tryCatch({
                         if (is.null(private$result)){
                           stop(paste("No dimensionality reduction result found.
@@ -164,10 +184,21 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                             labs(x='Dimension 1', y='Dimension 2', col='Jaccard Similarity') +
                             scale_color_gradient(low='red', high='green')
 
+                          if(ratio){
+                            plt <- plt + coord_fixed(ratio=ratio)
+                          }
+
                           if (save){
-                            ggsave(filename=filename, plot=plt,
-                                   height=height, width=width,
-                                   units=units)
+                            # ggsave(filename=filename,
+                            #        plot=egg::set_panel_size(p=plt,
+                            #                                 width = grid::unit(width, units = units),
+                            #                                 height = grid::unit(height, units = units))
+                            # )
+                            ggsave(filename = filename,
+                                   plot = plt,
+                                   width = width,
+                                   height = height,
+                                   units = units)
                           }
 
                           print(plt)
@@ -187,38 +218,41 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                       })
                     },
 
-                  ############################################################
-                    plot_Jaccard_per_neighbor = function(max_k, method='euclidean',
-                                                         save=FALSE, filename=NULL,
-                                                         width=500, height=500,
-                                                         units='px'){
-                      result <- data.frame()
-
-                      if (max_k >= nrow(self$data)){
-                        message('The number of the maximum nearest neighbors cannot exceed the number of observations. Setting the maximum number of nearest neighbors to the number of observations - 1')
-                        max_k <- nrow(self$data) - 1
-                      }
-
-                      for(k in c(1:max_k)){
-                        result <- rbind(result, data.frame(rep(k, nrow(self$data)),
-                                                           mean(self$get_Jaccard_similarity(k, method))))
-                      }
-
-                      colnames(result) <- c('k', 'jaccard_similarity')
-
-                      plt <- ggplot(result, aes(x=k, y=jaccard_similarity)) +
-                        geom_line() +
-                        labs(x = 'k', y = 'Average Jaccard Similarity')
-
-                      if (save){
-                        ggsave(filename=filename, plot=plt,
-                               height=height, width=width,
-                               units=units)
-                      }
-
-                      print(plt)
-                      return(plt)
-                    },
+                  # ############################################################
+                  #   plot_Jaccard_per_neighbor = function(low_k, high_k, method='euclidean',
+                  #                                        save=FALSE, filename=NULL,
+                  #                                        width=NA, height=NA,
+                  #                                        units=c("in", "cm", "mm", "px")
+                  #                                        ){
+                  #     result <- data.frame()
+                  #
+                  #     if (high_k >= nrow(self$data)){
+                  #       message('The number of the maximum nearest neighbors cannot exceed the number of observations. Setting the maximum number of nearest neighbors to the number of observations - 1')
+                  #       high_k <- nrow(self$data) - 1
+                  #     }
+                  #
+                  #     for(k in c(low_k:high_k)){
+                  #       result <- rbind(result, data.frame(rep(k, nrow(self$data)),
+                  #                                          mean(self$get_Jaccard_similarity(k, method))))
+                  #     }
+                  #
+                  #     colnames(result) <- c('k', 'jaccard_similarity')
+                  #
+                  #     plt <- ggplot(result, aes(x=k, y=jaccard_similarity)) +
+                  #       geom_line() +
+                  #       labs(x = 'k', y = 'Average Jaccard Similarity')
+                  #
+                  #     if (save){
+                  #       ggsave(filename = filename,
+                  #              plot = plt,
+                  #              width = width,
+                  #              height = height,
+                  #              units = units)
+                  #     }
+                  #
+                  #     print(plt)
+                  #     return(plt)
+                  #   },
 
                   ##############################################################
                     trustworthiness = function(k=5) {

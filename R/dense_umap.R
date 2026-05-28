@@ -13,7 +13,6 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                         n_components = NULL,
                         min_dist = NULL,
                         spread = NULL,
-                        dens_frac = NULL,
                         dens_lambda = NULL,
 
                         #' densmap_iris = dense_umap$new(data=iris[!duplicated(iris),1:4], group=iris[!duplicated(iris),]$Species, n_neighbors=8, n_components = 2)
@@ -26,7 +25,6 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                                               n_components = 2,
                                               min_dist = 0.1,
                                               spread = 1,
-                                              dens_frac = 0.3,
                                               dens_lambda = 0.1,
                                               sampling = NULL,
                                               print_result = FALSE,
@@ -49,7 +47,6 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                           self$n_components <- n_components
                           self$min_dist <- min_dist
                           self$spread <- spread
-                          self$dens_frac <- dens_frac
                           self$dens_lambda <- dens_lambda
 
                           private$result <- self$get_result(print_result=FALSE, ...)
@@ -57,16 +54,18 @@ dense_umap <- R6Class(classname = "dense-UMAP",
 
                         get_result = function(print_result=FALSE, ...){
                           tryCatch({
-                            private$result <- densmap(x = data.frame(self$data),
-                                                      n_neighbors = self$n_neighbors,
-                                                      n_components = self$n_components,
-                                                      metric = self$metric,
-                                                      min_dist = self$min_dist,
-                                                      spread = self$spread,
-                                                      dens_frac = self$dens_frac,
-                                                      dens_lambda = self$dens_lambda,
-                                                      ...
-                                                      )
+                            if(is.null(private$result)){
+                              private$result <- uwot::umap2(X = data.frame(self$data),
+                                                            n_neighbors = self$n_neighbors,
+                                                            n_components = self$n_components,
+                                                            metric = self$metric,
+                                                            min_dist = self$min_dist,
+                                                            spread = self$spread,
+                                                            dens_scale = self$dens_lambda,
+                                                            ...
+                                                            )
+                            }
+
                             if (print_result) {
                               return(private$result)
                             } else {

@@ -58,18 +58,19 @@ R_umap <- R6Class(classname = "umap",
                     ############################################################
                     get_result = function(print_result=FALSE, ...){
                       tryCatch({
-                        result = umap2(X = self$data,
-                                       n_neighbors = self$n_neighbors,
-                                       n_components = self$n_components,
-                                       metric = self$metric,
-                                       min_dist = self$min_dist,
-                                       spread = self$spread,
-                                       ret_extra = c('fgraph'),
-                                       ...)
+                        if(is.null(private$result)){
+                          result = uwot::umap2(X = self$data,
+                                         n_neighbors = self$n_neighbors,
+                                         n_components = self$n_components,
+                                         metric = self$metric,
+                                         min_dist = self$min_dist,
+                                         spread = self$spread,
+                                         ret_extra = c('fgraph'),
+                                         ...)
 
-                        private$result <- result$embedding
-
-                        private$V <- result$fgraph
+                          private$result <- result$embedding
+                          private$V <- result$fgraph
+                        }
 
                         if (print_result) {
                           return(private$result)

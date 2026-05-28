@@ -56,13 +56,16 @@ R_tsne <- R6Class(classname = "t-SNE",
 
                    get_result = function(print_result=FALSE, ...){
                      tryCatch({
-                       results <- Rtsne(self$data,
-                                        dims = self$dims,
-                                        perplexity = self$perplexity,
-                                        theta = self$theta,
-                                        is_distance = self$isDistance,
-                                        ...)
-                       private$result <- as.data.frame(results$Y)
+                       if(is.null(private$result)){
+                         results <- Rtsne(self$data,
+                                          dims = self$dims,
+                                          perplexity = self$perplexity,
+                                          theta = self$theta,
+                                          is_distance = self$isDistance,
+                                          ...)
+                         private$result <- as.data.frame(results$Y)
+                       }
+
                        if (print_result) {
                          return(private$result)
                        } else {

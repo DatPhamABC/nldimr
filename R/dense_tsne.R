@@ -13,8 +13,6 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                     theta = NULL,
                     initial_dims = NULL,
                     momentum = NULL,
-                    eta = NULL,
-                    dens_frac = NULL,
                     dens_lambda = NULL,
 
                     #' densne_iris = dense_tsne$new(data=iris[!duplicated(iris),1:4], group=iris[!duplicated(iris),]$Species, dims=2, perplexity=20)
@@ -27,8 +25,6 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                                           theta = 0.5,
                                           initial_dims = 50,
                                           momentum = 0.5,
-                                          eta = 200,
-                                          dens_frac = 0.3,
                                           dens_lambda = 0.1,
                                           sampling = NULL,
                                           print_result = FALSE,
@@ -49,10 +45,7 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                       self$dims <- dims
                       self$perplexity <- perplexity
                       self$theta <- theta
-                      self$initial_dims <- initial_dims
                       self$momentum <- momentum
-                      self$eta <- eta
-                      self$dens_frac <- dens_frac
                       self$dens_lambda <- dens_lambda
 
                       private$result <- self$get_result(print_result=FALSE, ...)
@@ -60,17 +53,17 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
 
                     get_result = function(print_result=FALSE, ...){
                       tryCatch({
-                        private$result <- densne(X = self$data,
-                                          dims = self$dims,
-                                          perplexity = self$perplexity,
-                                          theta = self$theta,
-                                          initial_dims = self$initial_dims,
-                                          momentum = self$momentum,
-                                          eta = self$eta,
-                                          dens_frac = self$dens_frac,
-                                          dens_lambda = self$dens_lambda,
-                                          ...
-                                          )
+                        if(is.null(private$result)){
+                          private$result <- densne(X = self$data,
+                                            dims = self$dims,
+                                            perplexity = self$perplexity,
+                                            theta = self$theta,
+                                            momentum = self$momentum,
+                                            dens_lambda = self$dens_lambda,
+                                            ...
+                                            )
+                        }
+
                         if (print_result) {
                           return(private$result)
                         } else {
