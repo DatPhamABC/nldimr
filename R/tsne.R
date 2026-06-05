@@ -39,7 +39,7 @@ R_tsne <- R6Class(classname = "t-SNE",
                        sample_index <- sample(nrow(data), size=sampling)
 
                        self$data <- data[sample_index,]
-                       self$group <- group[sample_index,]
+                       self$group <- group[sample_index]
                      } else {
                        self$data <- data
                        self$group <- group
@@ -99,7 +99,11 @@ R_tsne <- R6Class(classname = "t-SNE",
                    },
 
                   ##############################################################
-                   plot_PQ = function(sampling = NULL){
+                   plot_PQ = function(sampling = NULL,
+                                      save=FALSE, filename=NULL,
+                                      width=NA, height=NA,
+                                      units=c("in", "cm", "mm", "px"),
+                                      display_legend=FALSE){
                      pq_data <- data.frame(c(self$get_P()), c(self$get_Q()))
 
                      if(!is.null(sampling)){
@@ -112,7 +116,16 @@ R_tsne <- R6Class(classname = "t-SNE",
                        geom_point(alpha=0.5) +
                        labs(x='P probabilities', y='Q probabilities')
 
+                     if(!display_legend) plt <- plt + theme(legend.position="none")
                      print(plt)
+
+                     if(save){
+                       ggsave(filename = filename,
+                              plot=plt,
+                              width=width,
+                              height=height,
+                              units=units)
+                     }
                      return(plt)
                    }
 

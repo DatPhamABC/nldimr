@@ -34,7 +34,7 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                             sample_index <- sample(nrow(data), size=sampling)
 
                             self$data <- data[sample_index,]
-                            self$group <- group[sample_index,]
+                            self$group <- group[sample_index]
                           } else {
                             self$data <- data
                             self$group <- group
@@ -99,7 +99,11 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                         },
 
                         ##############################################################
-                        plot_VW = function(sampling = NULL){
+                        plot_VW = function(sampling = NULL,
+                                           save=FALSE, filename=NULL,
+                                           width=NA, height=NA,
+                                           units=c("in", "cm", "mm", "px"),
+                                           display_legend=FALSE){
                           vw_data <- data.frame(self$get_V(), self$get_W())
 
                           if(!is.null(sampling)){
@@ -113,7 +117,16 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                             labs(x='Smooth distance normalization\n(High dimensionality)',
                                  y='Weight representation\n(Low dimentionality)')
 
+                          if(!display_legend) plt <- plt + theme(legend.position="none")
                           print(plt)
+
+                          if(save){
+                            ggsave(filename = filename,
+                                   plot=plt,
+                                   width=width,
+                                   height=height,
+                                   units=units)
+                          }
                           return(plt)
                         }
 

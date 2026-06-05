@@ -1,7 +1,7 @@
 
 # umap_iris = R_umap$new(data=iris[!duplicated(iris),1:4], isDistance=FALSE, group=iris[!duplicated(iris),]$Species, n_neighbors=8, n_components = 2)
 
-R_umap <- R6Class(classname = "umap",
+R_umap <- R6Class(classname = "UMAP",
 
                   inherit = Dimension_reduction,
 
@@ -38,7 +38,7 @@ R_umap <- R6Class(classname = "umap",
                         sample_index <- sample(nrow(data), size=sampling)
 
                         self$data <- data[sample_index,]
-                        self$group <- group[sample_index,]
+                        self$group <- group[sample_index]
                       } else {
                         self$data <- data
                         self$group <- group
@@ -108,10 +108,14 @@ R_umap <- R6Class(classname = "umap",
                     },
 
                   ##############################################################
-                    plot_VW = function(sampling = NULL){
+                    plot_VW = function(sampling = NULL,
+                                       save=FALSE, filename=NULL,
+                                       width=NA, height=NA,
+                                       units=c("in", "cm", "mm", "px"),
+                                       display_legend=FALSE){
                       vw_data <- data.frame(self$get_V(), self$get_W())
 
-                      if(!is.null(sampling)){
+                      if(!is.null(sampling) | !is.na(sampling)){
                         vw_data <- vw_data[sample(nrow(vw_data), size = sampling), ]
                       }
 
@@ -122,7 +126,16 @@ R_umap <- R6Class(classname = "umap",
                         labs(x='Smooth distance normalization\n(High dimensionality)',
                              y='Weight representation\n(Low dimentionality)')
 
+                      if(!display_legend) plt <- plt + theme(legend.position="none")
                       print(plt)
+
+                      if(save){
+                        ggsave(filename = filename,
+                               plot=plt,
+                               width=width,
+                               height=height,
+                               units=units)
+                      }
                       return(plt)
                     }
 

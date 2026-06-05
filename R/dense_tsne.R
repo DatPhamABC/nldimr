@@ -23,18 +23,15 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                                           dims = 2,
                                           perplexity = 50,
                                           theta = 0.5,
-                                          initial_dims = 50,
-                                          momentum = 0.5,
                                           dens_lambda = 0.1,
                                           sampling = NULL,
-                                          print_result = FALSE,
                                           ...
                                           ) {
                       if(!is.null(sampling)){
                         sample_index <- sample(nrow(data), size=sampling)
 
                         self$data <- data[sample_index,]
-                        self$group <- group[sample_index,]
+                        self$group <- group[sample_index]
                       } else {
                         self$data <- data
                         self$group <- group
@@ -45,7 +42,6 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                       self$dims <- dims
                       self$perplexity <- perplexity
                       self$theta <- theta
-                      self$momentum <- momentum
                       self$dens_lambda <- dens_lambda
 
                       private$result <- self$get_result(print_result=FALSE, ...)
@@ -53,16 +49,15 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
 
                     get_result = function(print_result=FALSE, ...){
                       tryCatch({
-                        if(is.null(private$result)){
+                        # if(is.null(private$result)){
                           private$result <- densne(X = self$data,
                                             dims = self$dims,
                                             perplexity = self$perplexity,
                                             theta = self$theta,
-                                            momentum = self$momentum,
                                             dens_lambda = self$dens_lambda,
                                             ...
                                             )
-                        }
+                        # }
 
                         if (print_result) {
                           return(private$result)
@@ -97,7 +92,11 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                     },
 
                   ##############################################################
-                    plot_PQ = function(sampling = NULL){
+                    plot_PQ = function(sampling = NULL,
+                                       save=FALSE, filename=NULL,
+                                       width=NA, height=NA,
+                                       units=c("in", "cm", "mm", "px"),
+                                       display_legend=FALSE){
                       pq_data <- data.frame(self$get_P(), self$get_Q())
 
                       if(!is.null(sampling)){
@@ -110,7 +109,16 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                         geom_point(alpha=0.5) +
                         labs(x='P probabilities', y='Q probabilities')
 
+                      if(!display_legend) plt <- plt + theme(legend.position="none")
                       print(plt)
+
+                      if(save){
+                        ggsave(filename = filename,
+                               plot=plt,
+                               width=width,
+                               height=height,
+                               units=units)
+                      }
                       return(plt)
                     }
 

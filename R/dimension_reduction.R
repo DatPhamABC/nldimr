@@ -51,14 +51,6 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
 
                           print(plt)
 
-                          # if (save){
-                          #   ggsave(filename=filename,
-                          #          plot=egg::set_panel_size(p=plt,
-                          #                                   width = grid::unit(width, units = units),
-                          #                                   height = grid::unit(height, units = units))
-                          #   )
-                          # }
-
                           if(save){
                             ggsave(filename = filename,
                                    plot=plt,
@@ -85,10 +77,10 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                     },
 
                   ##############################################################
-                    shepard_diagram = function(sampling = NULL,
-                                               save=FALSE, filename=NULL,
-                                               width=NA, height=NA,
-                                               units=c("in", "cm", "mm", "px")){
+                    fit_plot = function(sampling = NULL,
+                                        save=FALSE, filename=NULL,
+                                        width=NA, height=NA,
+                                        units=c("in", "cm", "mm", "px")){
                       if (self$isDistance){
                         full_dist <- data.frame(as.vector(self$data),
                                                 as.vector(dist(private$result)))
@@ -140,8 +132,8 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
 
                         for (row in 1:nrow(self$data)){
                           jaccard_sim <- append(jaccard_sim,
-                                               private$jacc(as.vector(order(high.dist[row,])[2:(k+1)]),
-                                                            as.vector(order(low.dist[row,])[2:(k+1)])))
+                                                private$jacc(as.vector(order(high.dist[row,])[2:(k+1)]),
+                                                             as.vector(order(low.dist[row,])[2:(k+1)])))
                         }
 
                         return(jaccard_sim)
@@ -182,18 +174,13 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                             geom_point(size = 2, alpha=0.6) +
                             aes(x=dim_1, y=dim_2, col=jaccard) +
                             labs(x='Dimension 1', y='Dimension 2', col='Jaccard Similarity') +
-                            scale_color_gradient(low='red', high='green')
+                            scale_color_gradient(low='red', high='green', limits = c(0,1))
 
                           if(ratio){
                             plt <- plt + coord_fixed(ratio=ratio)
                           }
 
                           if (save){
-                            # ggsave(filename=filename,
-                            #        plot=egg::set_panel_size(p=plt,
-                            #                                 width = grid::unit(width, units = units),
-                            #                                 height = grid::unit(height, units = units))
-                            # )
                             ggsave(filename = filename,
                                    plot = plt,
                                    width = width,
@@ -217,42 +204,6 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                         print(e)
                       })
                     },
-
-                  # ############################################################
-                  #   plot_Jaccard_per_neighbor = function(low_k, high_k, method='euclidean',
-                  #                                        save=FALSE, filename=NULL,
-                  #                                        width=NA, height=NA,
-                  #                                        units=c("in", "cm", "mm", "px")
-                  #                                        ){
-                  #     result <- data.frame()
-                  #
-                  #     if (high_k >= nrow(self$data)){
-                  #       message('The number of the maximum nearest neighbors cannot exceed the number of observations. Setting the maximum number of nearest neighbors to the number of observations - 1')
-                  #       high_k <- nrow(self$data) - 1
-                  #     }
-                  #
-                  #     for(k in c(low_k:high_k)){
-                  #       result <- rbind(result, data.frame(rep(k, nrow(self$data)),
-                  #                                          mean(self$get_Jaccard_similarity(k, method))))
-                  #     }
-                  #
-                  #     colnames(result) <- c('k', 'jaccard_similarity')
-                  #
-                  #     plt <- ggplot(result, aes(x=k, y=jaccard_similarity)) +
-                  #       geom_line() +
-                  #       labs(x = 'k', y = 'Average Jaccard Similarity')
-                  #
-                  #     if (save){
-                  #       ggsave(filename = filename,
-                  #              plot = plt,
-                  #              width = width,
-                  #              height = height,
-                  #              units = units)
-                  #     }
-                  #
-                  #     print(plt)
-                  #     return(plt)
-                  #   },
 
                   ##############################################################
                     trustworthiness = function(k=5) {
@@ -342,7 +293,42 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                         message('Continuity error:')
                         print(e)
                       })
+                    },
+
+
+                  ##############################################################
+                    lcmc = function(k=5) {
+                      tryCatch({
+                        if (is.null(private$result)){
+                          stop(paste("No dimensionality reduction result found.
+                                            Please run get_Result() first."))
+                        }
+                        n <- nrow(self$data)
+
+                        # Compute distances
+                        dist_high <- as.matrix(dist(self$data))
+                        dist_low  <- as.matrix(dist(private$result))
+
+                        # Get kNN
+                        knn_high <- lapply(1:n, function(i) order(dist_high[i, ])[2:(k+1)])
+                        knn_low  <- lapply(1:n, function(i) order(dist_low[i, ])[2:(k+1)])
+
+                        # Compute intersection
+                        intersection <- sapply(1:n, function(i) {
+                          length(intersect(knn_high[[i]], knn_low[[i]]))
+                        })
+
+                        # LCMC
+                        lcmc <- (1 / (n * k)) * sum(intersection) - (k / (n - 1))
+
+                        return(lcmc)
+                      }, error = function(e) {
+                        message('LCMC error:')
+                        print(e)
+                      })
                     }
+
+
                   ),
 
 
@@ -413,7 +399,6 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                                        colors = c('#00000020'))
                       }
 
-                      print(data)
                       fig <- fig %>% add_markers()
                       fig <- fig %>% plotly::layout(scene = list(xaxis = list(title = 'Dimension 1'),
                                                                  yaxis = list(title = 'Dimension 2'),
