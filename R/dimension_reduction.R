@@ -176,7 +176,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                             labs(x='Dimension 1', y='Dimension 2', col='Jaccard Similarity') +
                             scale_color_gradient(low='red', high='green', limits = c(0,1))
 
-                          if(ratio){
+                          if(!is.null(ratio)){
                             plt <- plt + coord_fixed(ratio=ratio)
                           }
 

@@ -115,7 +115,7 @@ R_umap <- R6Class(classname = "UMAP",
                                        display_legend=FALSE){
                       vw_data <- data.frame(self$get_V(), self$get_W())
 
-                      if(!is.null(sampling) | !is.na(sampling)){
+                      if(!is.null(sampling) && !is.na(sampling)){
                         vw_data <- vw_data[sample(nrow(vw_data), size = sampling), ]
                       }
 
