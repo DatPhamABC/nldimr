@@ -38,8 +38,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                             geom_point(size = 2, alpha=0.5) +
                             aes(x=dim_1, y=dim_2) +
                             labs(x='Dimension 1', y='Dimension 2') +
-                            coord_fixed(ratio=ratio) +
-                            scale_color_brewer(palette="Paired")
+                            coord_fixed(ratio=ratio)
 
                           if(!display_legend) plt <- plt + theme(legend.position="none")
 
