@@ -21,13 +21,11 @@ compare_trustworthiness <- function(methods = c(), list_k = NULL,
   # Adjusting the maximum k
   for(method in methods[-1]) lowest_max_row <- min(lowest_max_row, nrow(method$data))
   if (tail(list_k, 1) >= lowest_max_row){
-    message('The number of the maximum nearest neighbors cannot exceed the number of observations.
-            Setting the maximum number of nearest neighbors to the number of observations - 1')
+    message('The number of the maximum nearest neighbors cannot exceed the number of observations.\nSetting the maximum number of nearest neighbors to the number of observations - 1')
     list_k <- list_k[list_k<lowest_max_row]
 
     if (length(list_k) == 0) {
-      stop("All values in list_k exceed the number of observations.
-           Please provide smaller k values.")
+      stop("All values in list_k exceed the number of observations. Please provide smaller k values.")
     }
   }
 
@@ -78,18 +76,13 @@ compare_trustworthiness <- function(methods = c(), list_k = NULL,
     }
   }
 
-  # Return raw result if there is no group
-  if (is.null(group_attrs)) {
-    return(list(results = qm_results, summary = NULL))
-  }
-
   # Checking validity of groups
   invalid_attrs <- group_attrs[!group_attrs %in% colnames(qm_results)]
   if (length(invalid_attrs) > 0) {
     stop(paste("group_attrs not found in results:", paste(invalid_attrs, collapse = ', ')))
   }
 
-
+  group_attrs <- unique(c(c('Params', 'k'), group_attrs))
   formula_str <- paste('trustworthiness ~', paste(group_attrs, collapse = ' + '))
   qm_avg <- aggregate(as.formula(formula_str), data = qm_results, FUN = 'mean')
   qm_sd  <- aggregate(as.formula(formula_str), data = qm_results, FUN = 'sd')
@@ -125,13 +118,11 @@ compare_continuity <- function(methods = c(),
   # Adjusting the maximum k
   for(method in methods[-1]) lowest_max_row <- min(lowest_max_row, nrow(method$data))
   if (tail(list_k, 1) >= lowest_max_row){
-    message('The number of the maximum nearest neighbors cannot exceed the number of observations.
-            Setting the maximum number of nearest neighbors to the number of observations - 1')
+    message('The number of the maximum nearest neighbors cannot exceed the number of observations.\nSetting the maximum number of nearest neighbors to the number of observations - 1')
     list_k <- list_k[list_k<lowest_max_row]
 
     if (length(list_k) == 0) {
-      stop("All values in list_k exceed the number of observations.
-           Please provide smaller k values.")
+      stop("All values in list_k exceed the number of observations. Please provide smaller k values.")
     }
   }
 
@@ -182,11 +173,13 @@ compare_continuity <- function(methods = c(),
     }
   }
 
-  # Return raw result if there is no group
-  if (is.null(group_attrs)) {
-    return(list(results = qm_results, summary = NULL))
+  # Checking validity of groups
+  invalid_attrs <- group_attrs[!group_attrs %in% colnames(qm_results)]
+  if (length(invalid_attrs) > 0) {
+    stop(paste("group_attrs not found in results:", paste(invalid_attrs, collapse = ', ')))
   }
 
+  group_attrs <- unique(c(c('Params', 'k'), group_attrs))
   formula_str <- paste('continuity ~', paste(group_attrs, collapse = ' + '))
   qm_avg <- aggregate(as.formula(formula_str), data = qm_results, FUN = 'mean')
   qm_sd  <- aggregate(as.formula(formula_str), data = qm_results, FUN = 'sd')
@@ -222,13 +215,11 @@ compare_kNN_Jaccard_similarity <- function(methods = c(), list_k = NULL,
   # Adjusting the maximum k
   for(method in methods[-1]) lowest_max_row <- min(lowest_max_row, nrow(method$data))
   if (tail(list_k, 1) >= lowest_max_row){
-    message('The number of the maximum nearest neighbors cannot exceed the number of observations.
-            Setting the maximum number of nearest neighbors to the number of observations - 1')
+    message('The number of the maximum nearest neighbors cannot exceed the number of observations.\nSetting the maximum number of nearest neighbors to the number of observations - 1')
     list_k <- list_k[list_k<lowest_max_row]
 
     if (length(list_k) == 0) {
-      stop("All values in list_k exceed the number of observations.
-           Please provide smaller k values.")
+      stop("All values in list_k exceed the number of observations. Please provide smaller k values.")
     }
   }
 
@@ -250,7 +241,7 @@ compare_kNN_Jaccard_similarity <- function(methods = c(), list_k = NULL,
     }
 
     for(k_i in list_k){
-      jacc <- method$get_Jaccard_similarity(k_i)
+      jacc <- method$neighborhood_Jaccard_similarity(k_i)
       qm_results[[index]] <- c(
         list(Method = method$name,
              Params = param_group,
@@ -279,11 +270,13 @@ compare_kNN_Jaccard_similarity <- function(methods = c(), list_k = NULL,
     }
   }
 
-  # Return raw result if there is no group
-  if (is.null(group_attrs)) {
-    return(list(results = qm_results, summary = NULL))
+  # Checking validity of groups
+  invalid_attrs <- group_attrs[!group_attrs %in% colnames(qm_results)]
+  if (length(invalid_attrs) > 0) {
+    stop(paste("group_attrs not found in results:", paste(invalid_attrs, collapse = ', ')))
   }
 
+  group_attrs <- unique(c(c('Params', 'k'), group_attrs))
   formula_str <- paste('njs ~', paste(group_attrs, collapse = ' + '))
   qm_avg <- aggregate(as.formula(formula_str), data = qm_results, FUN = 'mean')
   qm_sd  <- aggregate(as.formula(formula_str), data = qm_results, FUN = 'sd')
@@ -316,7 +309,7 @@ compare_kNN_Jaccard_similarity <- function(methods = c(), list_k = NULL,
 #   }
 #
 #   for (method in methods) {
-#     jacc <- method$get_Jaccard_similarity(k)
+#     jacc <- method$neighborhood_Jaccard_similarity(k)
 #     qm_results <- append(qm_results, mapply(function(x, i) list(method = method$name, jacc = x),
 #                                           jacc, SIMPLIFY = FALSE))
 #   }
@@ -377,13 +370,11 @@ compare_lcmc <- function(methods = c(), list_k = NULL,
   # Adjusting the maximum k
   for(method in methods[-1]) lowest_max_row <- min(lowest_max_row, nrow(method$data))
   if (tail(list_k, 1) >= lowest_max_row){
-    message('The number of the maximum nearest neighbors cannot exceed the number of observations.
-            Setting the maximum number of nearest neighbors to the number of observations - 1')
+    message('The number of the maximum nearest neighbors cannot exceed the number of observations.\nSetting the maximum number of nearest neighbors to the number of observations - 1')
     list_k <- list_k[list_k<lowest_max_row]
 
     if (length(list_k) == 0) {
-      stop("All values in list_k exceed the number of observations.
-           Please provide smaller k values.")
+      stop("All values in list_k exceed the number of observations. Please provide smaller k values.")
     }
   }
 
@@ -433,11 +424,13 @@ compare_lcmc <- function(methods = c(), list_k = NULL,
     }
   }
 
-  # Return raw result if there is no group
-  if (is.null(group_attrs)) {
-    return(list(results = qm_results, summary = NULL))
+  # Checking validity of groups
+  invalid_attrs <- group_attrs[!group_attrs %in% colnames(qm_results)]
+  if (length(invalid_attrs) > 0) {
+    stop(paste("group_attrs not found in results:", paste(invalid_attrs, collapse = ', ')))
   }
 
+  group_attrs <- unique(c(c('Params', 'k'), group_attrs))
   formula_str <- paste('lcmc ~', paste(group_attrs, collapse = ' + '))
   qm_avg <- aggregate(as.formula(formula_str), data = qm_results, FUN = 'mean')
   qm_sd  <- aggregate(as.formula(formula_str), data = qm_results, FUN = 'sd')

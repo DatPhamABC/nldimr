@@ -1,4 +1,4 @@
-dense_umap <- R6Class(classname = "dense-UMAP",
+R_dense_umap <- R6Class(classname = "dense-UMAP",
 
                       inherit = Dimension_reduction,
 
@@ -118,7 +118,7 @@ dense_umap <- R6Class(classname = "dense-UMAP",
                                  y='Weight representation\n(Low dimentionality)')
 
                           if(!display_legend) plt <- plt + theme(legend.position="none")
-                          print(plt)
+                          # print(plt)
 
                           if(save){
                             ggsave(filename = filename,

@@ -90,6 +90,10 @@ ggplot(data = iris_lcmc$summary,
 ![Iris t-SNE LCMC compare](man/figures/iris_lcmc.png)
 
 
+## Tutorial
+
+[![Introduction and basic functions]](https://drive.google.com/file/d/1vYwLJBRbqjo2OhQCglBAhoKGRzzw4qtS/view?usp=drive_link)
+
 
 
 

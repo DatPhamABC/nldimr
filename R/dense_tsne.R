@@ -1,4 +1,4 @@
-dense_tsne <- R6Class(classname = "dense-tSNE",
+R_dense_tsne <- R6Class(classname = "dense-tSNE",
 
                   inherit = Dimension_reduction,
 
@@ -110,7 +110,7 @@ dense_tsne <- R6Class(classname = "dense-tSNE",
                         labs(x='P probabilities', y='Q probabilities')
 
                       if(!display_legend) plt <- plt + theme(legend.position="none")
-                      print(plt)
+                      # print(plt)
 
                       if(save){
                         ggsave(filename = filename,

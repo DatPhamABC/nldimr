@@ -127,7 +127,7 @@ R_umap <- R6Class(classname = "UMAP",
                              y='Weight representation\n(Low dimentionality)')
 
                       if(!display_legend) plt <- plt + theme(legend.position="none")
-                      print(plt)
+                      # print(plt)
 
                       if(save){
                         ggsave(filename = filename,

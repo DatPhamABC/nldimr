@@ -48,7 +48,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                               labs(col = 'Groups')
                           }
 
-                          print(plt)
+                          # print(plt)
 
                           if(save){
                             ggsave(filename = filename,
@@ -107,13 +107,13 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                                units=units)
                       }
 
-                      print(plt)
+                      # print(plt)
                       return(plt)
 
                     },
 
                   ##############################################################
-                    get_Jaccard_similarity = function(k=5, method='euclidean'){
+                    neighborhood_Jaccard_similarity = function(k=5, method='euclidean'){
                       tryCatch({
                         if(is.null(k) | k>=nrow(self$data)){
                           stop("Invalid number of neighbors. The number of neighbors must be less than the number of observations.")
@@ -162,7 +162,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                         }
 
 
-                        jaccard <- self$get_Jaccard_similarity(k, method)
+                        jaccard <- self$neighborhood_Jaccard_similarity(k, method)
                         full_data <- data.frame(private$result, jaccard)
 
                         if ( ncol(private$result) == 2 ) {
@@ -187,7 +187,7 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
                                    units = units)
                           }
 
-                          print(plt)
+                          # print(plt)
                           return(plt)
 
                         }
@@ -332,50 +332,9 @@ Dimension_reduction <- R6Class(classname = "dimension reduction",
 
 
 
-
                   # private attributes and methods
                   private = list(
                     result = NULL,
-
-                    # plot2d <- function(result, ...){
-                    #
-                    #   full_data <- copy(result)
-                    #   cols <- c('Dimension_1', 'Dimension_2')
-                    #
-                    #   args <- list(...)
-                    #   nms <- names(args)
-                    #
-                    #   for (i in seq_along(args)){
-                    #     if (!is.null(nms) && nms[i] != ""){
-                    #       cols <- append(cols, nms[i])
-                    #       full_data <- cbind(full_data, args[[i]])
-                    #     }
-                    #   }
-                    #
-                    #
-                    #
-                    #   # separate plot with group and without group
-                    #   # if (is.null(self$group)) {
-                    #   #
-                    #   #   full_result = private$result
-                    #   #   colnames(full_result) <- c('Dimension_1', 'Dimension_2')
-                    #   #   plt = ggplot(data = full_result,
-                    #   #                mapping=aes(x = Dimension_1, y=Dimension_2)) +
-                    #   #     geom_point(size=2) +
-                    #   #     labs(x='Dimension 1', y='Dimension 2')
-                    #   #
-                    #   # } else {
-                    #   #   full_result = as.data.frame(cbind(private$result, self$group))
-                    #   #   colnames(full_result) <- c('Dimension_1', 'Dimension_2', 'Group')
-                    #   #   plt = ggplot(data = full_result,
-                    #   #                mapping=aes(x = Dimension_1, y=Dimension_2,
-                    #   #                            col = as.factor(Group))) +
-                    #   #     geom_point(size=2) +
-                    #   #     labs(x='Dimension 1', y='Dimension 2', color='Group')
-                    #   # }
-                    #
-                    #   return(plt)
-                    # },
 
                     ############################################################
                     plot_3d = function(data, group = NULL){

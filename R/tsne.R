@@ -117,7 +117,7 @@ R_tsne <- R6Class(classname = "t-SNE",
                        labs(x='P probabilities', y='Q probabilities')
 
                      if(!display_legend) plt <- plt + theme(legend.position="none")
-                     print(plt)
+                     # print(plt)
 
                      if(save){
                        ggsave(filename = filename,
